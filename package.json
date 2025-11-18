@@ -17,6 +17,7 @@
     "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write \"**/*.{js,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,json,md}\"",
+    "knip": "knip",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "chai-http": "^5.0.0",
     "eslint": "^8.55.0",
     "husky": "^8.0.3",
+    "knip": "^5.70.0",
     "lint-staged": "^15.2.0",
     "mocha": "^10.7.0",
     "prettier": "^3.1.1",

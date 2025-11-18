@@ -1,45 +1,105 @@
-# Dependencies
+# =========================================================
+# Node / NPM
+# =========================================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Build outputs
+# Env files
+.env
+.env.*
+
+
+# =========================================================
+# Cloudflare Workers / Wrangler / D1
+# =========================================================
+
+# Wrangler local state
+wrangler.toml
+.wrangler/
+.wrangler/**
+
+# D1 local DB storage
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+*.sql.tmp
+
+# Miniflare data
+.data/
+.data/**
+
+
+# =========================================================
+# Test / Coverage / Reports
+# =========================================================
+coverage/
+coverage/**
+
+# Mocha snapshots / temp
+mocha-*.log
+
+
+# =========================================================
+# Build Output (if you build workers)
+# =========================================================
 dist/
 build/
-coverage/
-.nyc_output/
+out/
+workers-site/
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
-# IDE and editor files
+# =========================================================
+# OS / Editor / IDE Files
+# =========================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VSCode
 .vscode/
+.vscode/*
+
+# JetBrains
 .idea/
+
+# temp swap files
 *.swp
 *.swo
 *~
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# lock files from editors
+*.lock-wscript
 
+
+# =========================================================
 # Logs
-logs
+# =========================================================
 *.log
+logs/
+logs/**
 
-# Wrangler (Cloudflare Workers)
-.wrangler/
 
-# Temporary files
-tmp/
-temp/
+# =========================================================
+# Package Manager Artifacts
+# =========================================================
+
+# Remove ONLY if you want to commit package-lock.json
+# (Recommended to KEEP package-lock.json)
+# package-lock.json
+
+
+# =========================================================
+# Git / Husky
+# =========================================================
+
+# Husky backup stash files
+*.orig
+
+# Commit message backups
+COMMIT_EDITMSG

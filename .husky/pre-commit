@@ -3,5 +3,9 @@
 
 npx lint-staged
 npm audit
+npm run knip || {
+    echo "stand"
+}
+npm run test:coverage
 npm test
 
