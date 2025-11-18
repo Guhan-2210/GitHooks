@@ -98,29 +98,29 @@ export async function getTodo(request, env) {
 // handlers/todos.js
 export const createTodoHandler =
   (deps = { createTodo }) =>
-  async (request, env) => {
-    try {
-      const data = request.validatedData || (await request.json());
-      const todo = await deps.createTodo(env.DB, data);
+    async (request, env) => {
+      try {
+        const data = request.validatedData || (await request.json());
+        const todo = await deps.createTodo(env.DB, data);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: todo,
-          message: 'Todo created successfully',
-        }),
-        { status: 201 }
-      );
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Failed to create todo',
-        }),
-        { status: 500 }
-      );
-    }
-  };
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: todo,
+            message: 'Todo created successfully',
+          }),
+          { status: 201 }
+        );
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Failed to create todo',
+          }),
+          { status: 500 }
+        );
+      }
+    };
 
 /**
  * PATCH /todos/:id - Update a todo (partial update)
