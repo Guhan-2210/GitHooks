@@ -1,0 +1,50 @@
+{
+  "name": "todo-list-api",
+  "version": "1.0.0",
+  "description": "A modular ToDo list CRUD API using itty-router and Cloudflare D1",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply todo-list-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply todo-list-db --remote",
+    "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' mocha 'test/**/*.test.js' --require test/setup.js --recursive --exit --timeout 5000",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' mocha 'test/**/*.test.js' --require test/setup.js --recursive --watch --timeout 5000",
+    "test:coverage": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' c8 --all --include='src/**/*.js' --exclude='test/**' --reporter=html --reporter=text --reporter=lcov --check-coverage --lines 80 --functions 80 --branches 75 mocha 'test/**/*.test.js' --require test/setup.js --recursive --exit --timeout 5000",
+    "test:coverage:report": "npm run test:coverage && open coverage/index.html",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write \"**/*.{js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,json,md}\"",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "itty-router": "^4.0.0",
+    "joi": "^17.9.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4",
+    "c8": "^10.1.2",
+    "chai": "^5.1.0",
+    "chai-http": "^5.0.0",
+    "eslint": "^8.55.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "mocha": "^10.7.0",
+    "prettier": "^3.1.1",
+    "sinon": "^18.0.0",
+    "sinon-chai": "^4.0.0",
+    "wrangler": "^4.47.0"
+  },
+  "keywords": [
+    "api",
+    "todo",
+    "crud",
+    "cloudflare",
+    "d1"
+  ],
+  "author": "",
+  "license": "MIT"
+}
