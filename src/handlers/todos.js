@@ -125,20 +125,59 @@ export const createTodoHandler =
 /**
  * PATCH /todos/:id - Update a todo (partial update)
  */
-export async function updateTodoHandler(request, env) {
-  try {
-    // ID is already validated by validateTodoId middleware
-    const id = parseInt(request.params.id);
+export const updateTodoHandler =
+  (deps = { updateTodo }) =>
+  async (request, env) => {
+    try {
+      // ID is already validated by validateTodoId middleware
+      const id = parseInt(request.params.id);
 
-    const updates = request.validatedData || (await request.json());
+      const updates = request.validatedData || (await request.json());
 
-    const todo = await updateTodo(env.DB, id, updates);
+      const todo = await deps.updateTodo(env.DB, id, updates);
 
-    if (!todo) {
+      if (!todo) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Todo not found',
+          }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: todo,
+          message: 'Todo updated successfully',
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } catch (error) {
+      if (error.message === 'No valid fields provided for update') {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: error.message,
+          }),
+          {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Todo not found',
+          error: 'not found',
         }),
         {
           status: 404,
@@ -146,44 +185,7 @@ export async function updateTodoHandler(request, env) {
         }
       );
     }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: todo,
-        message: 'Todo updated successfully',
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    if (error.message === 'No valid fields provided for update') {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: error.message,
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'not found',
-      }),
-      {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
-}
+  };
 
 /**
  * DELETE /todos/:id - Delete a todo

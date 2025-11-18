@@ -7,6 +7,7 @@ import {
   updateTodoHandler,
   deleteTodoHandler,
 } from '../../src/handlers/todos.js';
+import { updateTodo } from '../../src/models/todo.js';
 import { describe, it, beforeEach, afterEach } from 'mocha';
 
 describe('Todo Handlers', () => {
@@ -191,11 +192,12 @@ describe('Todo Handlers', () => {
         }),
       });
 
+      const handler = updateTodoHandler({ updateTodo });
       const request = createMockRequest('PATCH', '/api/todos/99', { title: 'Missing' });
       request.params = { id: '99' };
       request.validatedData = { title: 'Missing' };
 
-      const response = await updateTodoHandler(request, env, ctx);
+      const response = await handler(request, env, ctx);
       const data = await response.json();
 
       expect(response.status).to.equal(404);
