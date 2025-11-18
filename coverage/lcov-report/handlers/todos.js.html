@@ -633,94 +633,94 @@ export async function getTodo(request, env) {
 // handlers/todos.js
 export const createTodoHandler =
   (deps = { createTodo }) =&gt;
-    async (request, env) =&gt; {
-      try {
-        const data = request.validatedData <span class="branch-0 cbranch-no" title="branch not covered" >|| (await request.json());</span>
-        const todo = await deps.createTodo(env.DB, data);
+  async (request, env) =&gt; {
+    try {
+      const data = request.validatedData <span class="branch-0 cbranch-no" title="branch not covered" >|| (await request.json());</span>
+      const todo = await deps.createTodo(env.DB, data);
 &nbsp;
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: todo,
-            message: 'Todo created successfully',
-          }),
-          { status: 201 }
-        );
-      } <span class="branch-0 cbranch-no" title="branch not covered" >catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >        return new Response(</span>
-<span class="cstat-no" title="statement not covered" >          JSON.stringify({</span>
-<span class="cstat-no" title="statement not covered" >            success: false,</span>
-<span class="cstat-no" title="statement not covered" >            error: 'Failed to create todo',</span>
-<span class="cstat-no" title="statement not covered" >          }),</span>
-<span class="cstat-no" title="statement not covered" >          { status: 500 }</span>
-<span class="cstat-no" title="statement not covered" >        );</span>
-<span class="cstat-no" title="statement not covered" >      }</span>
-    };
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: todo,
+          message: 'Todo created successfully',
+        }),
+        { status: 201 }
+      );
+    } <span class="branch-0 cbranch-no" title="branch not covered" >catch (error) {</span>
+<span class="cstat-no" title="statement not covered" >      return new Response(</span>
+<span class="cstat-no" title="statement not covered" >        JSON.stringify({</span>
+<span class="cstat-no" title="statement not covered" >          success: false,</span>
+<span class="cstat-no" title="statement not covered" >          error: 'Failed to create todo',</span>
+<span class="cstat-no" title="statement not covered" >        }),</span>
+<span class="cstat-no" title="statement not covered" >        { status: 500 }</span>
+<span class="cstat-no" title="statement not covered" >      );</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+  };
 &nbsp;
 /**
  * PATCH /todos/:id - Update a todo (partial update)
  */
 export const updateTodoHandler =
   (deps = { updateTodo }) =&gt;
-    async (request, env) =&gt; {
-      try {
+  async (request, env) =&gt; {
+    try {
       // ID is already validated by validateTodoId middleware
-        const id = parseInt(request.params.id);
+      const id = parseInt(request.params.id);
 &nbsp;
-        const updates = request.validatedData <span class="branch-0 cbranch-no" title="branch not covered" >|| (await request.json());</span>
+      const updates = request.validatedData <span class="branch-0 cbranch-no" title="branch not covered" >|| (await request.json());</span>
 &nbsp;
-        const todo = await deps.updateTodo(env.DB, id, updates);
+      const todo = await deps.updateTodo(env.DB, id, updates);
 &nbsp;
-        if (!todo) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >          return new Response(</span>
-<span class="cstat-no" title="statement not covered" >            JSON.stringify({</span>
-<span class="cstat-no" title="statement not covered" >              success: false,</span>
-<span class="cstat-no" title="statement not covered" >              error: 'Todo not found',</span>
-<span class="cstat-no" title="statement not covered" >            }),</span>
-<span class="cstat-no" title="statement not covered" >            {</span>
-<span class="cstat-no" title="statement not covered" >              status: 404,</span>
-<span class="cstat-no" title="statement not covered" >              headers: { 'Content-Type': 'application/json' },</span>
-<span class="cstat-no" title="statement not covered" >            }</span>
-<span class="cstat-no" title="statement not covered" >          );</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
+      if (!todo) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >        return new Response(</span>
+<span class="cstat-no" title="statement not covered" >          JSON.stringify({</span>
+<span class="cstat-no" title="statement not covered" >            success: false,</span>
+<span class="cstat-no" title="statement not covered" >            error: 'Todo not found',</span>
+<span class="cstat-no" title="statement not covered" >          }),</span>
+<span class="cstat-no" title="statement not covered" >          {</span>
+<span class="cstat-no" title="statement not covered" >            status: 404,</span>
+<span class="cstat-no" title="statement not covered" >            headers: { 'Content-Type': 'application/json' },</span>
+<span class="cstat-no" title="statement not covered" >          }</span>
+<span class="cstat-no" title="statement not covered" >        );</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: todo,
-            message: 'Todo updated successfully',
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      } catch (error) {
-        if (error.message === 'No valid fields provided for update') <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >          return new Response(</span>
-<span class="cstat-no" title="statement not covered" >            JSON.stringify({</span>
-<span class="cstat-no" title="statement not covered" >              success: false,</span>
-<span class="cstat-no" title="statement not covered" >              error: error.message,</span>
-<span class="cstat-no" title="statement not covered" >            }),</span>
-<span class="cstat-no" title="statement not covered" >            {</span>
-<span class="cstat-no" title="statement not covered" >              status: 400,</span>
-<span class="cstat-no" title="statement not covered" >              headers: { 'Content-Type': 'application/json' },</span>
-<span class="cstat-no" title="statement not covered" >            }</span>
-<span class="cstat-no" title="statement not covered" >          );</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: todo,
+          message: 'Todo updated successfully',
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } catch (error) {
+      if (error.message === 'No valid fields provided for update') <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >        return new Response(</span>
+<span class="cstat-no" title="statement not covered" >          JSON.stringify({</span>
+<span class="cstat-no" title="statement not covered" >            success: false,</span>
+<span class="cstat-no" title="statement not covered" >            error: error.message,</span>
+<span class="cstat-no" title="statement not covered" >          }),</span>
+<span class="cstat-no" title="statement not covered" >          {</span>
+<span class="cstat-no" title="statement not covered" >            status: 400,</span>
+<span class="cstat-no" title="statement not covered" >            headers: { 'Content-Type': 'application/json' },</span>
+<span class="cstat-no" title="statement not covered" >          }</span>
+<span class="cstat-no" title="statement not covered" >        );</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'not found',
-          }),
-          {
-            status: 404,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      }
-    };
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'not found',
+        }),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  };
 &nbsp;
 /**
  * DELETE /todos/:id - Delete a todo
@@ -775,7 +775,7 @@ export async function deleteTodoHandler(request, env) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-18T14:01:39.524Z
+                at 2025-11-18T14:03:16.166Z
             </div>
         <script src="../prettify.js"></script>
         <script>
