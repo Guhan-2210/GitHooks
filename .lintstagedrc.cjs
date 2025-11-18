@@ -34,5 +34,5 @@ module.exports = {
     if (filtered.length === 0) return [];
     return [`prettier --write --ignore-path .prettierignore ${filtered.join(' ')}`];
   },
-  'package.json': ['npm pkg validate'],
+  'package.json': ['prettier --write package.json'],
 };
