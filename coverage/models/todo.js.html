@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>85/85</span>
+                <span class='fraction'>92/92</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>85/85</span>
+                <span class='fraction'>92/92</span>
             </div>
         
             
@@ -147,7 +147,15 @@
 <a name='L82'></a><a href='#L82'>82</a>
 <a name='L83'></a><a href='#L83'>83</a>
 <a name='L84'></a><a href='#L84'>84</a>
-<a name='L85'></a><a href='#L85'>85</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">15x</span>
@@ -172,6 +180,9 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
@@ -189,6 +200,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -221,6 +233,9 @@
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">5x</span>
@@ -231,12 +246,13 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">5x</span></td><td class="text"><pre class="prettyprint lang-js">/**
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * Helper function to convert DB row to todo object with proper types
  */
 function formatTodo(row) {
   if (!row) return null;
-  
+&nbsp;
   return {
     ...row,
     completed: Boolean(row.completed), // Convert 0/1 to false/true
@@ -255,8 +271,11 @@ export async function getAllTodos(db, completed = null) {
     params = [completed ? 1 <span class="branch-0 cbranch-no" title="branch not covered" >: 0]</span>;
   }
 &nbsp;
-  const result = await db.prepare(query).bind(...params).all();
-  
+  const result = await db
+    .prepare(query)
+    .bind(...params)
+    .all();
+&nbsp;
   // Convert completed field to boolean for all todos
   return result.results.map(formatTodo);
 }
@@ -273,9 +292,10 @@ export async function getTodoById(db, id) {
  * Create a new todo
  */
 export async function createTodo(db, { title, description = '' }) {
-  const result = await db.prepare(
-    'INSERT INTO todos (title, description, completed) VALUES (?, ?, 0) RETURNING *'
-  ).bind(title, description).first();
+  const result = await db
+    .prepare('INSERT INTO todos (title, description, completed) VALUES (?, ?, 0) RETURNING *')
+    .bind(title, description)
+    .first();
 &nbsp;
   return formatTodo(result);
 }
@@ -304,7 +324,10 @@ export async function updateTodo(db, id, updates) {
   values.push(id);
 &nbsp;
   const query = `UPDATE todos SET ${fields.join(', ')} WHERE id = ? RETURNING *`;
-  const result = await db.prepare(query).bind(...values).first();
+  const result = await db
+    .prepare(query)
+    .bind(...values)
+    .first();
 &nbsp;
   return formatTodo(result);
 }
@@ -315,14 +338,15 @@ export async function updateTodo(db, id, updates) {
 export async function deleteTodo(db, id) {
   const result = await db.prepare('DELETE FROM todos WHERE id = ?').bind(id).run();
   return result.changes &gt; 0;
-}</pre></td></tr></table></pre>
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-11-12T06:50:29.103Z
+                at 2025-11-18T13:53:42.983Z
             </div>
         <script src="../prettify.js"></script>
         <script>
