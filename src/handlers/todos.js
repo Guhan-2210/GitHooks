@@ -17,13 +17,13 @@ export async function getTodos(request, env) {
     if (completedParam !== null) {
       completed = completedParam.toLowerCase() === 'true';
     }
-    console.log('hiii');
     const todos = await getAllTodos(env.DB, completed);
 
     return new Response(
       JSON.stringify({
         success: true,
         data: todos,
+        message: 'Todos fetched successfully',
         count: todos.length,
       }),
       {
