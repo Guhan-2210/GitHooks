@@ -188,7 +188,7 @@ describe('Todo Handlers', () => {
     it('should return 404 when no rows updated', async () => {
       env.DB.prepare = sandbox.stub().returns({
         bind: sandbox.stub().returns({
-          run: sandbox.stub().resolves({ changes: 0 }),
+          first: sandbox.stub().resolves(null), // Returns null when no rows found
         }),
       });
 
