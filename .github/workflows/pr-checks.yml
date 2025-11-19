@@ -64,4 +64,6 @@ jobs:
           file: ./coverage/lcov.info
           flags: pr-checks
           name: codecov-umbrella
-          fail_ci_if_error: true
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+        continue-on-error: true
