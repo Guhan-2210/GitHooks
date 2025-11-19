@@ -95,47 +95,87 @@ export async function getTodo(request, env) {
 /**
  * POST /todos - Create a new todo
  */
-export const createTodoHandler = (deps = { createTodo }) => async (request, env) => {
-  try {
-    const data = request.validatedData || (await request.json());
-    const todo = await deps.createTodo(env.DB, data);
+export const createTodoHandler = (deps = { createTodo }) => {
+  return async (request, env) => {
+    try {
+      const data = request.validatedData || (await request.json());
+      const todo = await deps.createTodo(env.DB, data);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: todo,
-        message: 'Todo created successfully',
-      }),
-      { status: 201 }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Failed to create todo',
-      }),
-      { status: 500 }
-    );
-  }
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: todo,
+          message: 'Todo created successfully',
+        }),
+        { status: 201 }
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Failed to create todo',
+        }),
+        { status: 500 }
+      );
+    }
+  };
 };
 
 /**
  * PATCH /todos/:id - Update a todo (partial update)
  */
-export const updateTodoHandler = (deps = { updateTodo }) => async (request, env) => {
-  try {
-    // ID is already validated by validateTodoId middleware
-    const id = parseInt(request.params.id);
+export const updateTodoHandler = (deps = { updateTodo }) => {
+  return async (request, env) => {
+    try {
+      // ID is already validated by validateTodoId middleware
+      const id = parseInt(request.params.id);
 
-    const updates = request.validatedData || (await request.json());
+      const updates = request.validatedData || (await request.json());
 
-    const todo = await deps.updateTodo(env.DB, id, updates);
+      const todo = await deps.updateTodo(env.DB, id, updates);
 
-    if (!todo) {
+      if (!todo) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Todo not found',
+          }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: todo,
+          message: 'Todo updated successfully',
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } catch (error) {
+      if (error.message === 'No valid fields provided for update') {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: error.message,
+          }),
+          {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Todo not found',
+          error: 'not found',
         }),
         {
           status: 404,
@@ -143,43 +183,7 @@ export const updateTodoHandler = (deps = { updateTodo }) => async (request, env)
         }
       );
     }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: todo,
-        message: 'Todo updated successfully',
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    if (error.message === 'No valid fields provided for update') {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: error.message,
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'not found',
-      }),
-      {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  };
 };
 
 /**
