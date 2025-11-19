@@ -1,0 +1,8 @@
+{
+  "entry": ["server.js", "test/**/*.test.js"],
+  "project": ["src/**/*.js", "test/**/*.js"],
+  "ignore": [],
+  "ignoreBinaries": ["open"],
+  "ignoreDependencies": [],
+  "ignoreExportsUsedInFile": true
+}
