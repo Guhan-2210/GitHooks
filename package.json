@@ -13,7 +13,7 @@
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' mocha 'test/**/*.test.js' --require test/setup.js --recursive --watch --timeout 5000",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' c8 --all --include='src/**/*.js' --exclude='test/**' --reporter=html --reporter=text --reporter=lcov --check-coverage --lines 80 --functions 80 --branches 75 mocha 'test/**/*.test.js' --require test/setup.js --recursive --exit --timeout 5000",
     "test:coverage:report": "npm run test:coverage && open coverage/index.html",
-    "lint": "eslint . --ext .js",
+    "lint": "eslint . --ext .js --config .eslintrc.json",
     "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write \"**/*.{js,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,json,md}\"",

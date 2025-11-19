@@ -6,7 +6,7 @@ import { getAllTodos, getTodoById, createTodo, updateTodo, deleteTodo } from '..
 
 /**
  * GET /todos - Get all todos
- * Query params: completed (boolean) - filter by completion status
+ * Query params: completed (boolean) - filter by completion status (optional)
  */
 export async function getTodos(request, env) {
   try {
@@ -95,10 +95,8 @@ export async function getTodo(request, env) {
 /**
  * POST /todos - Create a new todo
  */
-// handlers/todos.js
-export const createTodoHandler =
-  (deps = { createTodo }) =>
-  async (request, env) => {
+export const createTodoHandler = (deps = { createTodo }) => {
+  return async (request, env) => {
     try {
       const data = request.validatedData || (await request.json());
       const todo = await deps.createTodo(env.DB, data);
@@ -121,13 +119,13 @@ export const createTodoHandler =
       );
     }
   };
+};
 
 /**
  * PATCH /todos/:id - Update a todo (partial update)
  */
-export const updateTodoHandler =
-  (deps = { updateTodo }) =>
-  async (request, env) => {
+export const updateTodoHandler = (deps = { updateTodo }) => {
+  return async (request, env) => {
     try {
       // ID is already validated by validateTodoId middleware
       const id = parseInt(request.params.id);
@@ -186,6 +184,7 @@ export const updateTodoHandler =
       );
     }
   };
+};
 
 /**
  * DELETE /todos/:id - Delete a todo

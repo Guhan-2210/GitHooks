@@ -14,8 +14,7 @@ import {
   deleteTodoHandler,
 } from './src/handlers/todos.js';
 
-// Create router instance
-//Chumma comment
+// Create router instance for handling API routes
 const router = Router();
 
 // Middleware to handle CORS
