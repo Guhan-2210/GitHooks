@@ -187,15 +187,16 @@ describe('Todo Handlers', () => {
     it('should return 404 when no rows updated', async () => {
       env.DB.prepare = sandbox.stub().returns({
         bind: sandbox.stub().returns({
-          run: sandbox.stub().resolves({ changes: 0 }),
+          first: sandbox.stub().resolves(null), // Returns null when no rows found
         }),
       });
 
+      const handler = updateTodoHandler({ updateTodo });
       const request = createMockRequest('PATCH', '/api/todos/99', { title: 'Missing' });
       request.params = { id: '99' };
       request.validatedData = { title: 'Missing' };
 
-      const response = await updateTodoHandler(request, env, ctx);
+      const response = await handler(request, env, ctx);
       const data = await response.json();
 
       expect(response.status).to.equal(404);
