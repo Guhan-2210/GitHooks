@@ -7,6 +7,7 @@ import {
   updateTodoHandler,
   deleteTodoHandler,
 } from '../../src/handlers/todos.js';
+import { updateTodo } from '../../src/models/todo.js';
 import { describe, it, beforeEach, afterEach } from 'mocha';
 
 describe('Todo Handlers', () => {
