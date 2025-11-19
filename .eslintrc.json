@@ -2,7 +2,8 @@
   "root": true,
   "env": {
     "es2022": true,
-    "node": true
+    "node": true,
+    "mocha": true
   },
   "extends": [],
   "parserOptions": {
@@ -18,5 +19,13 @@
     "no-console": "warn",
     "prefer-const": "error",
     "no-var": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["test/**/*.js"],
+      "rules": {
+        "indent": "off"
+      }
+    }
+  ]
 }
