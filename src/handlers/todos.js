@@ -6,7 +6,7 @@ import { getAllTodos, getTodoById, createTodo, updateTodo, deleteTodo } from '..
 
 /**
  * GET /todos - Get all todos
- * Query params: completed (boolean) - filter by completion status
+ * Query params: completed (boolean) - filter by completion status (optional)
  */
 export async function getTodos(request, env) {
   try {
@@ -95,7 +95,6 @@ export async function getTodo(request, env) {
 /**
  * POST /todos - Create a new todo
  */
-// handlers/todos.js
 export const createTodoHandler =
   (deps = { createTodo }) =>
   async (request, env) => {
