@@ -25,9 +25,9 @@ const corsHeaders = {
 };
 
 function handleCors(request) {
-    if (request.method === 'OPTIONS') {
-        return new Response(null, { headers: corsHeaders });
-    }
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 }
 
 // Apply CORS middleware to all routes
@@ -42,33 +42,33 @@ router.delete('/api/todos/:id', validateTodoId, deleteTodoHandler);
 
 // Error handling wrapper
 async function handleRequest(request, env, ctx) {
-    try {
-        // Add CORS headers to all responses
-        const response = await router.handle(request, env, ctx);
+  try {
+    // Add CORS headers to all responses
+    const response = await router.handle(request, env, ctx);
 
-        if (response && !response.headers.has('Access-Control-Allow-Origin')) {
-            // Clone the response to add CORS headers
-            const newResponse = new Response(response.body, {
-                status: response.status,
-                statusText: response.statusText,
-                headers: {
-                    ...Object.fromEntries(response.headers),
-                    ...corsHeaders,
-                },
-            });
-            return newResponse;
-        }
-
-        return response;
-    } catch (error) {
-        return errorResponse('Internal server error', 500);
+    if (response && !response.headers.has('Access-Control-Allow-Origin')) {
+      // Clone the response to add CORS headers
+      const newResponse = new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: {
+          ...Object.fromEntries(response.headers),
+          ...corsHeaders,
+        },
+      });
+      return newResponse;
     }
+
+    return response;
+  } catch (error) {
+    return errorResponse('Internal server error', 500);
+  }
 }
 
 // Export the fetch handler for Cloudflare Workers
 export default {
-    async fetch(request, env, ctx) {
-        return handleRequest(request, env, ctx);
-    },
+  async fetch(request, env, ctx) {
+    return handleRequest(request, env, ctx);
+  },
 };
 // test comment
