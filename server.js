@@ -34,14 +34,30 @@ function handleCors(request) {
 router.all('*', handleCors);
 
 // Health Check Route - Verify all services are operational
-router.get('/health', async (request, env) => {
+router.get('/health', async (_request, _env) => {
+  // ⚠️ INTENTIONAL FAILURE FOR TESTING ROLLBACK ⚠️
   const healthStatus = {
-    status: 'ok',
+    status: 'error',
     timestamp: new Date().toISOString(),
     service: 'todo-list-api',
-    checks: {},
+    checks: {
+      test_failure: {
+        status: 'error',
+        message: 'Intentional failure to test automatic rollback',
+      },
+    },
   };
 
+  // Force failure to trigger rollback
+  return new Response(JSON.stringify(healthStatus), {
+    status: 503,
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders,
+    },
+  });
+
+  /* Original health check code - commented out for testing
   let allHealthy = true;
 
   // Check D1 Database connectivity
@@ -92,6 +108,7 @@ router.get('/health', async (request, env) => {
       ...corsHeaders,
     },
   });
+  */
 });
 
 // API Routes
