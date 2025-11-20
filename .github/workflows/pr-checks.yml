@@ -52,20 +52,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          # Enable caching for npm dependencies
+          # Enable caching for npm dependencies (caches ~/.npm)
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
-
-      # Cache node_modules for next job
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
 
 
   # -------------------------------
@@ -112,15 +103,10 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
-
-      # Restore cached node_modules from previous job
-      - name: Restore node_modules cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
+      
+      # Install dependencies (will be fast due to npm cache from Job 1)
+      - name: Install dependencies
+        run: npm ci
 
       # -------------------------------
       # ESLINT
