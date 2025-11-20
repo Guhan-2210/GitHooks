@@ -1,195 +1,88 @@
 name: PR Quality Checks
 
-# Self-hosted CI/CD workflow with dependency caching and artifact uploads
-# Updated: Fixed directory structure - code is at repo root, not in subdirectory
-# No cd GitHooks commands needed - everything runs from repo root
-
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  # -------------------------------
-  # JOB 1: INSTALL DEPENDENCIES
-  # -------------------------------
+  # -----------------------------------------------------
+  # JOB 1: INSTALL DEPENDENCIES (USING NPM CACHE)
+  # -----------------------------------------------------
   install-dependencies:
-    runs-on: self-hosted
-    
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # -------------------------------
-      # PRINT WORKFLOW INFORMATION
-      # -------------------------------
-      - name: Print Workflow Info
-        run: |
-          echo "=========================================="
-          echo "🚀 WORKFLOW INFORMATION"
-          echo "=========================================="
-          echo "Runner Name: ${{ runner.name }}"
-          echo "Runner OS: ${{ runner.os }}"
-          echo "Runner Architecture: ${{ runner.arch }}"
-          echo "Workflow: ${{ github.workflow }}"
-          echo "Repository: ${{ github.repository }}"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Event: ${{ github.event_name }}"
-          echo "Actor: ${{ github.actor }}"
-          echo "Working Directory: $(pwd)"
-          echo "Directory Contents:"
-          ls -la
-          echo "=========================================="
-          echo "🔐 SECRETS STATUS"
-          echo "=========================================="
-          echo "NODE_ENV Secret: ${{ secrets.NODE_ENV != '' && '✅ Set' || '❌ Not Set' }}"
-          echo "MY_SECRET Secret: ${{ secrets.MY_SECRET != '' && '✅ Set' || '❌ Not Set' }}"
-          echo "CODECOV_TOKEN Secret: ${{ secrets.CODECOV_TOKEN != '' && '✅ Set' || '❌ Not Set' }}"
-          echo "=========================================="
+      # Cache NPM cache (NOT node_modules)
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          # Enable caching for npm dependencies (caches ~/.npm)
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
 
-  # -------------------------------
+
+  # -----------------------------------------------------
   # JOB 2: QUALITY CHECKS
-  # Depends on install-dependencies job
-  # -------------------------------
+  # -----------------------------------------------------
   quality-checks:
-    runs-on: self-hosted
-    # Job dependency: wait for install-dependencies to complete
+    runs-on: ubuntu-latest
     needs: install-dependencies
-    
-    # Set environment variables from secrets
-    env:
-      NODE_ENV: ${{ secrets.NODE_ENV || 'test' }}
-      MY_SECRET: ${{ secrets.MY_SECRET }}
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # -------------------------------
-      # PRINT JOB INFORMATION
-      # -------------------------------
-      - name: Print Quality Check Job Info
-        run: |
-          echo "=========================================="
-          echo "🧪 QUALITY CHECKS JOB"
-          echo "=========================================="
-          echo "Job ID: ${{ github.job }}"
-          echo "Run ID: ${{ github.run_id }}"
-          echo "Run Number: ${{ github.run_number }}"
-          echo "Attempt: ${{ github.run_attempt }}"
-          echo "Working Directory: $(pwd)"
-          echo "=========================================="
-          echo "🔐 ENVIRONMENT VARIABLES (from secrets)"
-          echo "=========================================="
-          echo "NODE_ENV: $NODE_ENV"
-          echo "MY_SECRET: ${MY_SECRET:+***REDACTED***}"
-          echo "MY_SECRET Length: ${#MY_SECRET}"
-          echo "=========================================="
+      # Reuse NPM cache from previous job
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-      
-      # Install dependencies (will be fast due to npm cache from Job 1)
+
+      # Job 2 installs dependencies again (fast because of cache)
       - name: Install dependencies
         run: npm ci
 
-      # -------------------------------
-      # ESLINT
-      # -------------------------------
+      # -- QUALITY CHECKS --
       - name: Run ESLint
         run: npm run lint
 
-      # -------------------------------
-      # PRETTIER
-      # -------------------------------
       - name: Run Prettier check
         run: npm run format:check
 
-      # -------------------------------
-      # KNIP (NORMAL MODE, NOT STRICT)
-      # -------------------------------
       - name: Run Knip
         run: npm run knip
 
-      # -------------------------------
-      # UNIT TESTS
-      # -------------------------------
       - name: Run Tests
         run: npm test
 
-      # -------------------------------
-      # CODE COVERAGE
-      # -------------------------------
-      - name: Run Tests with Coverage
+      - name: Run Test Coverage
         run: npm run test:coverage
-        env:
-          # Pass additional environment variables for testing
-          CI: true
-          GITHUB_ACTIONS: true
 
-      # -------------------------------
-      # PRINT COVERAGE SUMMARY
-      # -------------------------------
-      - name: Print Coverage Summary
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "📊 COVERAGE SUMMARY"
-          echo "=========================================="
-          if [ -f coverage/lcov.info ]; then
-            echo "✅ Coverage report generated successfully"
-            echo "Coverage files:"
-            ls -lh coverage/ | head -10
-          else
-            echo "❌ No coverage report found"
-          fi
-          echo "=========================================="
-
-      # Upload test results as artifact
-      - name: Upload test results
+      - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: test-results-${{ github.run_number }}
-          path: |
-            coverage/
-            **/*.test.log
-          retention-days: 30
-
-      # Upload coverage report as artifact
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-report-${{ github.run_number }}
+          name: coverage
           path: coverage/
-          retention-days: 30
-      
-      # -------------------------------
-      # FINAL STATUS
-      # -------------------------------
-      - name: Print Final Status
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "✅ QUALITY CHECKS COMPLETED"
-          echo "=========================================="
-          echo "Workflow Status: ${{ job.status }}"
-          echo "Time: $(date)"
-          echo "Artifacts uploaded successfully!"
-          echo "=========================================="
