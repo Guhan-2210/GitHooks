@@ -103,3 +103,13 @@ logs/**
 
 # Commit message backups
 COMMIT_EDITMSG
+
+
+# =========================================================
+# GitHub Actions Self-Hosted Runner
+# =========================================================
+# NEVER commit the actions-runner directory!
+# It should only exist locally on your runner machine
+actions-runner/
+_diag/
+_work/

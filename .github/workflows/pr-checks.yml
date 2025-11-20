@@ -1,5 +1,8 @@
 name: PR Quality Checks
 
+# Self-hosted CI/CD workflow with dependency caching and artifact uploads
+# Updated: Removed node_modules artifacts, using cache only for faster execution
+
 on:
   pull_request:
     branches: [ main ]
@@ -7,8 +10,45 @@ on:
     branches: [ main ]
 
 jobs:
+  # -------------------------------
+  # JOB 1: INSTALL DEPENDENCIES
+  # -------------------------------
+  install-dependencies:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          # Enable caching for npm dependencies
+          cache: 'npm'
+
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Cache node_modules for next job
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+
+  # -------------------------------
+  # JOB 2: QUALITY CHECKS
+  # Depends on install-dependencies job
+  # -------------------------------
   quality-checks:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    # Job dependency: wait for install-dependencies to complete
+    needs: install-dependencies
 
     steps:
       - name: Checkout repo
@@ -18,9 +58,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      # Restore cached node_modules from previous job
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
 
       # -------------------------------
       # ESLINT
@@ -57,13 +104,26 @@ jobs:
       # -------------------------------
       - name: Run Tests with Coverage
         run: npm run test:coverage
+        env:
+          # Using a secret (example)
+          NODE_ENV: ${{ secrets.NODE_ENV || 'test' }}
 
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+      # Upload test results as artifact
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          file: ./coverage/lcov.info
-          flags: pr-checks
-          name: codecov-umbrella
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-        continue-on-error: true
+          name: test-results
+          path: |
+            coverage/
+            **/*.test.log
+          retention-days: 30
+
+      # Upload coverage report as artifact
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
