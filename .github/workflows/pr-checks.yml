@@ -16,11 +16,6 @@ jobs:
   install-dependencies:
     runs-on: self-hosted
     
-    # Set working directory for all run steps
-    defaults:
-      run:
-        working-directory: GitHooks
-    
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -30,6 +25,7 @@ jobs:
       # -------------------------------
       - name: Print Workflow Info
         run: |
+          cd GitHooks
           echo "=========================================="
           echo "🚀 WORKFLOW INFORMATION"
           echo "=========================================="
@@ -59,7 +55,9 @@ jobs:
           cache-dependency-path: 'GitHooks/package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd GitHooks
+          npm ci
 
       # Cache node_modules for next job
       - name: Cache node_modules
@@ -79,11 +77,6 @@ jobs:
     runs-on: self-hosted
     # Job dependency: wait for install-dependencies to complete
     needs: install-dependencies
-
-    # Set working directory for all run steps
-    defaults:
-      run:
-        working-directory: GitHooks
     
     # Set environment variables from secrets
     env:
@@ -99,6 +92,7 @@ jobs:
       # -------------------------------
       - name: Print Quality Check Job Info
         run: |
+          cd GitHooks
           echo "=========================================="
           echo "🧪 QUALITY CHECKS JOB"
           echo "=========================================="
@@ -135,37 +129,41 @@ jobs:
       # ESLINT
       # -------------------------------
       - name: Run ESLint
-        run: npm run lint
-        # example package.json script:
-        # "lint": "eslint ."
+        run: |
+          cd GitHooks
+          npm run lint
 
       # -------------------------------
       # PRETTIER
       # -------------------------------
       - name: Run Prettier check
-        run: npm run format:check
-        # example script:
-        # "format:check": "prettier --check ."
+        run: |
+          cd GitHooks
+          npm run format:check
 
       # -------------------------------
       # KNIP (NORMAL MODE, NOT STRICT)
       # -------------------------------
       - name: Run Knip
-        run: npm run knip
-        # example script:
-        # "knip": "knip"
+        run: |
+          cd GitHooks
+          npm run knip
 
       # -------------------------------
       # UNIT TESTS
       # -------------------------------
       - name: Run Tests
-        run: npm test
+        run: |
+          cd GitHooks
+          npm test
 
       # -------------------------------
       # CODE COVERAGE
       # -------------------------------
       - name: Run Tests with Coverage
-        run: npm run test:coverage
+        run: |
+          cd GitHooks
+          npm run test:coverage
         env:
           # Pass additional environment variables for testing
           CI: true
@@ -177,6 +175,7 @@ jobs:
       - name: Print Coverage Summary
         if: always()
         run: |
+          cd GitHooks
           echo "=========================================="
           echo "📊 COVERAGE SUMMARY"
           echo "=========================================="
@@ -215,6 +214,7 @@ jobs:
       - name: Print Final Status
         if: always()
         run: |
+          cd GitHooks
           echo "=========================================="
           echo "✅ QUALITY CHECKS COMPLETED"
           echo "=========================================="
