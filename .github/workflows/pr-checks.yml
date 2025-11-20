@@ -1,7 +1,8 @@
 name: PR Quality Checks
 
 # Self-hosted CI/CD workflow with dependency caching and artifact uploads
-# Updated: Removed node_modules artifacts, using cache only for faster execution
+# Updated: Fixed directory structure - code is at repo root, not in subdirectory
+# No cd GitHooks commands needed - everything runs from repo root
 
 on:
   pull_request:
