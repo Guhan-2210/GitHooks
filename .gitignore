@@ -16,8 +16,7 @@ pnpm-debug.log*
 # Cloudflare Workers / Wrangler / D1
 # =========================================================
 
-# Wrangler local state
-wrangler.toml
+# Wrangler local state (keep wrangler.toml in git!)
 .wrangler/
 .wrangler/**
 
