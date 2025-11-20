@@ -29,7 +29,7 @@ jobs:
 
       - name: Publish to Cloudflare (Preview)
         run: |
-          wrangler deploy --env preview --branch ${{ github.event.workflow_run.head_branch }}
+          wrangler deploy --env preview
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -57,7 +57,7 @@ jobs:
 
       - name: Publish to Cloudflare (Production)
         run: |
-          wrangler deploy --env production --branch main
+          wrangler deploy --env production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
