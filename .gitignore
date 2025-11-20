@@ -112,3 +112,6 @@ COMMIT_EDITMSG
 actions-runner/
 _diag/
 _work/
+# GitHub Actions Runner (Local Self-Hosted Runner)
+# =========================================================
+actions-runner/
