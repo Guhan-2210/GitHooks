@@ -23,6 +23,9 @@ env:
   NODE_VERSION: 20
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  PREVIEW_URL: ${{ secrets.PREVIEW_URL }}  # e.g., https://todo-list-api-preview.your-subdomain.workers.dev
+  PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}  # e.g., https://todo-list-api-production.your-subdomain.workers.dev
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 jobs:
   # ======================================================
@@ -49,8 +52,94 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Get Previous Deployment Version
+        id: prev_version
+        run: |
+          echo "Getting previous deployment version..."
+          PREV_VERSION=$(npx wrangler deployments list --env preview 2>/dev/null | grep -v "Version ID" | head -1 | awk '{print $1}' || echo "none")
+          echo "previous_version=$PREV_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous version: $PREV_VERSION"
+
       - name: Publish to Cloudflare (Preview)
-        run: npx wrangler deploy --env preview
+        id: deploy
+        run: |
+          echo "🚀 Deploying to preview environment..."
+          npx wrangler deploy --env preview
+
+      - name: Wait for Deployment
+        run: |
+          echo "⏳ Waiting 30 seconds for deployment to propagate..."
+          sleep 30
+
+      - name: Health Check
+        id: health_check
+        run: |
+          echo "🏥 Running health check on ${{ env.PREVIEW_URL }}/health"
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.PREVIEW_URL }}/health || echo "000")
+          echo "Health check status: $HEALTH_STATUS"
+          
+          if [ "$HEALTH_STATUS" = "200" ]; then
+            echo "✅ Health check passed!"
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Health check failed with status: $HEALTH_STATUS"
+            echo "status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Rollback on Health Check Failure
+        if: failure() && steps.health_check.outcome == 'failure' && steps.prev_version.outputs.previous_version != 'none'
+        run: |
+          echo "🔄 Health check failed! Rolling back to previous version..."
+          echo "Previous version: ${{ steps.prev_version.outputs.previous_version }}"
+          npx wrangler rollback --env preview --version-id ${{ steps.prev_version.outputs.previous_version }}
+          echo "✅ Rollback completed!"
+
+      - name: Notify Slack on Rollback
+        if: failure() && steps.health_check.outcome == 'failure'
+        run: |
+          curl -X POST ${{ env.SLACK_WEBHOOK_URL }} \
+          -H 'Content-Type: application/json' \
+          -d '{
+            "text": "🚨 Automatic Rollback Triggered",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "🚨 Deployment Rollback - Preview Environment"
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Environment:*\nPreview"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Reason:*\nHealth check failed"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Branch:*\n${{ github.event.workflow_run.head_branch }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Rolled back to:*\n${{ steps.prev_version.outputs.previous_version }}"
+                  }
+                ]
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "View workflow run: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Click here>"
+                }
+              }
+            ]
+          }'
 
   # ======================================================
   # 🔵 2. PRODUCTION DEPLOYMENT (Automatic for main merges)
@@ -77,8 +166,94 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Get Previous Deployment Version
+        id: prev_version
+        run: |
+          echo "Getting previous deployment version..."
+          PREV_VERSION=$(npx wrangler deployments list --env production 2>/dev/null | grep -v "Version ID" | head -1 | awk '{print $1}' || echo "none")
+          echo "previous_version=$PREV_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous version: $PREV_VERSION"
+
       - name: Publish to Cloudflare (Production)
-        run: npx wrangler deploy --env production
+        id: deploy
+        run: |
+          echo "🚀 Deploying to production environment..."
+          npx wrangler deploy --env production
+
+      - name: Wait for Deployment
+        run: |
+          echo "⏳ Waiting 30 seconds for deployment to propagate..."
+          sleep 30
+
+      - name: Health Check
+        id: health_check
+        run: |
+          echo "🏥 Running health check on ${{ env.PRODUCTION_URL }}/health"
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.PRODUCTION_URL }}/health || echo "000")
+          echo "Health check status: $HEALTH_STATUS"
+          
+          if [ "$HEALTH_STATUS" = "200" ]; then
+            echo "✅ Health check passed!"
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Health check failed with status: $HEALTH_STATUS"
+            echo "status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Rollback on Health Check Failure
+        if: failure() && steps.health_check.outcome == 'failure' && steps.prev_version.outputs.previous_version != 'none'
+        run: |
+          echo "🔄 Health check failed! Rolling back to previous version..."
+          echo "Previous version: ${{ steps.prev_version.outputs.previous_version }}"
+          npx wrangler rollback --env production --version-id ${{ steps.prev_version.outputs.previous_version }}
+          echo "✅ Rollback completed!"
+
+      - name: Notify Slack on Rollback
+        if: failure() && steps.health_check.outcome == 'failure'
+        run: |
+          curl -X POST ${{ env.SLACK_WEBHOOK_URL }} \
+          -H 'Content-Type: application/json' \
+          -d '{
+            "text": "🚨 Automatic Rollback Triggered",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "🚨 Deployment Rollback - Production Environment"
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Environment:*\nProduction"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Reason:*\nHealth check failed"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Branch:*\nmain"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Rolled back to:*\n${{ steps.prev_version.outputs.previous_version }}"
+                  }
+                ]
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "View workflow run: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Click here>"
+                }
+              }
+            ]
+          }'
 
   # ======================================================
   # 🔁 3. MANUAL ROLLBACK (Preview & Production)

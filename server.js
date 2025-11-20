@@ -33,6 +33,67 @@ function handleCors(request) {
 // Apply CORS middleware to all routes
 router.all('*', handleCors);
 
+// Health Check Route - Verify all services are operational
+router.get('/health', async (request, env) => {
+  const healthStatus = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'todo-list-api',
+    checks: {},
+  };
+
+  let allHealthy = true;
+
+  // Check D1 Database connectivity
+  try {
+    if (!env.DB) {
+      throw new Error('D1 database not bound');
+    }
+    // Simple query to verify database is accessible
+    const result = await env.DB.prepare('SELECT 1 as health_check').first();
+    healthStatus.checks.d1_database = {
+      status: result ? 'ok' : 'error',
+      message: result ? 'Database is accessible' : 'Database query failed',
+    };
+    if (!result) allHealthy = false;
+  } catch (error) {
+    healthStatus.checks.d1_database = {
+      status: 'error',
+      message: error.message || 'Database connection failed',
+    };
+    allHealthy = false;
+  }
+
+  // Check if todos table exists and is queryable
+  try {
+    const tableCheck = await env.DB.prepare(
+      'SELECT name FROM sqlite_master WHERE type="table" AND name="todos"'
+    ).first();
+    healthStatus.checks.todos_table = {
+      status: tableCheck ? 'ok' : 'error',
+      message: tableCheck ? 'Todos table exists' : 'Todos table not found',
+    };
+    if (!tableCheck) allHealthy = false;
+  } catch (error) {
+    healthStatus.checks.todos_table = {
+      status: 'error',
+      message: error.message || 'Unable to verify todos table',
+    };
+    allHealthy = false;
+  }
+
+  // Set overall status
+  healthStatus.status = allHealthy ? 'ok' : 'error';
+
+  return new Response(JSON.stringify(healthStatus), {
+    status: allHealthy ? 200 : 503,
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders,
+    },
+  });
+});
+
 // API Routes
 router.get('/api/todos', getTodos);
 router.get('/api/todos/:id', validateTodoId, getTodo);
