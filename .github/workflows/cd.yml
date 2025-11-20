@@ -2,24 +2,41 @@ name: Cloudflare Deployment
 
 on:
   workflow_run:
-    workflows: ["PR Quality Checks"]      # Name of your CI workflow
-    types:
-      - completed                         # Trigger only after CI finishes
+    workflows: ["PR Quality Checks"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environment to deploy (preview or production)"
+        required: true
+        type: choice
+        options:
+          - preview
+          - production
+      ref:
+        description: "Commit SHA / branch / tag to deploy"
+        required: true
+        type: string
+
+# Shared environment variables for all jobs
+env:
+  NODE_VERSION: 20
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
 jobs:
-
   # ======================================================
-  # 🟡 1. PREVIEW / STAGING DEPLOYMENT FOR PRs
+  # 🟡 1. PREVIEW DEPLOYMENT (Automatic for PRs)
   # ======================================================
   deploy-preview:
     name: Deploy Preview (PR)
     runs-on: ubuntu-latest
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request'
-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Checkout PR Code
+      - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
@@ -27,31 +44,27 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
         run: npm ci
 
       - name: Publish to Cloudflare (Preview)
         run: npx wrangler deploy --env preview
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
 
   # ======================================================
-  # 🔵 2. PRODUCTION DEPLOYMENT FOR MAIN MERGES
+  # 🔵 2. PRODUCTION DEPLOYMENT (Automatic for main merges)
   # ======================================================
   deploy-production:
     name: Deploy Production (Main)
     runs-on: ubuntu-latest
     if: >
-      github.event.workflow_run.conclusion == 'success' &&
+      github.event_name == 'workflow_run' &&
       github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main'
-
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Checkout Main Branch
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: main
@@ -59,13 +72,34 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
         run: npm ci
 
       - name: Publish to Cloudflare (Production)
         run: npx wrangler deploy --env production
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  # ======================================================
+  # 🔁 3. MANUAL ROLLBACK (Preview & Production)
+  # ======================================================
+  rollback:
+    name: Manual Rollback Deploy
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout selected ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rollback Deployment
+        run: npx wrangler deploy --env ${{ github.event.inputs.env }}
