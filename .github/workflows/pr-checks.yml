@@ -25,7 +25,6 @@ jobs:
       # -------------------------------
       - name: Print Workflow Info
         run: |
-          cd GitHooks
           echo "=========================================="
           echo "🚀 WORKFLOW INFORMATION"
           echo "=========================================="
@@ -38,6 +37,8 @@ jobs:
           echo "Event: ${{ github.event_name }}"
           echo "Actor: ${{ github.actor }}"
           echo "Working Directory: $(pwd)"
+          echo "Directory Contents:"
+          ls -la
           echo "=========================================="
           echo "🔐 SECRETS STATUS"
           echo "=========================================="
@@ -52,19 +53,16 @@ jobs:
           node-version: 18
           # Enable caching for npm dependencies
           cache: 'npm'
-          cache-dependency-path: 'GitHooks/package-lock.json'
 
       - name: Install dependencies
-        run: |
-          cd GitHooks
-          npm ci
+        run: npm ci
 
       # Cache node_modules for next job
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
-          path: GitHooks/node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('GitHooks/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
 
@@ -92,7 +90,6 @@ jobs:
       # -------------------------------
       - name: Print Quality Check Job Info
         run: |
-          cd GitHooks
           echo "=========================================="
           echo "🧪 QUALITY CHECKS JOB"
           echo "=========================================="
@@ -114,14 +111,13 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
-          cache-dependency-path: 'GitHooks/package-lock.json'
 
       # Restore cached node_modules from previous job
       - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
-          path: GitHooks/node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('GitHooks/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
 
@@ -129,41 +125,31 @@ jobs:
       # ESLINT
       # -------------------------------
       - name: Run ESLint
-        run: |
-          cd GitHooks
-          npm run lint
+        run: npm run lint
 
       # -------------------------------
       # PRETTIER
       # -------------------------------
       - name: Run Prettier check
-        run: |
-          cd GitHooks
-          npm run format:check
+        run: npm run format:check
 
       # -------------------------------
       # KNIP (NORMAL MODE, NOT STRICT)
       # -------------------------------
       - name: Run Knip
-        run: |
-          cd GitHooks
-          npm run knip
+        run: npm run knip
 
       # -------------------------------
       # UNIT TESTS
       # -------------------------------
       - name: Run Tests
-        run: |
-          cd GitHooks
-          npm test
+        run: npm test
 
       # -------------------------------
       # CODE COVERAGE
       # -------------------------------
       - name: Run Tests with Coverage
-        run: |
-          cd GitHooks
-          npm run test:coverage
+        run: npm run test:coverage
         env:
           # Pass additional environment variables for testing
           CI: true
@@ -175,7 +161,6 @@ jobs:
       - name: Print Coverage Summary
         if: always()
         run: |
-          cd GitHooks
           echo "=========================================="
           echo "📊 COVERAGE SUMMARY"
           echo "=========================================="
@@ -195,8 +180,8 @@ jobs:
         with:
           name: test-results-${{ github.run_number }}
           path: |
-            GitHooks/coverage/
-            GitHooks/**/*.test.log
+            coverage/
+            **/*.test.log
           retention-days: 30
 
       # Upload coverage report as artifact
@@ -205,7 +190,7 @@ jobs:
         if: always()
         with:
           name: coverage-report-${{ github.run_number }}
-          path: GitHooks/coverage/
+          path: coverage/
           retention-days: 30
       
       # -------------------------------
@@ -214,7 +199,6 @@ jobs:
       - name: Print Final Status
         if: always()
         run: |
-          cd GitHooks
           echo "=========================================="
           echo "✅ QUALITY CHECKS COMPLETED"
           echo "=========================================="
