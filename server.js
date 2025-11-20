@@ -67,7 +67,7 @@ router.get('/health', async (request, env) => {
   // Check if todos table exists and is queryable
   try {
     const tableCheck = await env.DB.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='todos'"
+      'SELECT name FROM sqlite_master WHERE type="table" AND name="todos"'
     ).first();
     healthStatus.checks.todos_table = {
       status: tableCheck ? 'ok' : 'error',
