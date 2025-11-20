@@ -105,6 +105,13 @@ COMMIT_EDITMSG
 
 
 # =========================================================
+# GitHub Actions Self-Hosted Runner
+# =========================================================
+# NEVER commit the actions-runner directory!
+# It should only exist locally on your runner machine
+actions-runner/
+_diag/
+_work/
 # GitHub Actions Runner (Local Self-Hosted Runner)
 # =========================================================
 actions-runner/

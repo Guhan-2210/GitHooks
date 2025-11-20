@@ -18,7 +18,7 @@ name = "todo-list-api-preview"
 [[env.preview.d1_databases]]
 binding = "DB"
 database_name = "todo-list-db"
-database_id = "bb68849e-72ab-431a-8605-b8ff77c7f82d"  # Shared DB with production
+database_id = "bb68849e-72ab-431a-8605-b8ff77c7f82d"
 migrations_dir = "migrations"
 
 # ======================================================
@@ -30,5 +30,5 @@ name = "todo-list-api-production"
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "todo-list-db"
-database_id = "bb68849e-72ab-431a-8605-b8ff77c7f82d"  # Shared DB with production
+database_id = "bb68849e-72ab-431a-8605-b8ff77c7f82d"
 migrations_dir = "migrations"
