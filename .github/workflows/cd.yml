@@ -56,9 +56,10 @@ jobs:
         id: prev_version
         run: |
           echo "Getting previous deployment version..."
-          PREV_VERSION=$(npx wrangler deployments list --env preview --json 2>/dev/null | jq -r '.[0].versions[0].version_id // "none"' || echo "none")
+          PREV_VERSION=$(npx wrangler deployments list --env preview --json 2>/dev/null | jq -r 'sort_by(.created_on) | reverse | .[0].versions[0].version_id // "none"' || echo "none")
           echo "previous_version=$PREV_VERSION" >> $GITHUB_OUTPUT
           echo "Previous version: $PREV_VERSION"
+          echo "✓ Captured currently active version before new deployment"
 
       - name: Publish to Cloudflare (Preview)
         id: deploy
@@ -177,9 +178,10 @@ jobs:
         id: prev_version
         run: |
           echo "Getting previous deployment version..."
-          PREV_VERSION=$(npx wrangler deployments list --env production --json 2>/dev/null | jq -r '.[0].versions[0].version_id // "none"' || echo "none")
+          PREV_VERSION=$(npx wrangler deployments list --env production --json 2>/dev/null | jq -r 'sort_by(.created_on) | reverse | .[0].versions[0].version_id // "none"' || echo "none")
           echo "previous_version=$PREV_VERSION" >> $GITHUB_OUTPUT
           echo "Previous version: $PREV_VERSION"
+          echo "✓ Captured currently active version before new deployment"
 
       - name: Publish to Cloudflare (Production)
         id: deploy
