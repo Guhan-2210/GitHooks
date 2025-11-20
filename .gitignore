@@ -103,3 +103,9 @@ logs/**
 
 # Commit message backups
 COMMIT_EDITMSG
+
+
+# =========================================================
+# GitHub Actions Runner (Local Self-Hosted Runner)
+# =========================================================
+actions-runner/
