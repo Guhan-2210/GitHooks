@@ -16,9 +16,39 @@ jobs:
   install-dependencies:
     runs-on: self-hosted
     
+    # Set working directory for all run steps
+    defaults:
+      run:
+        working-directory: GitHooks
+    
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      # -------------------------------
+      # PRINT WORKFLOW INFORMATION
+      # -------------------------------
+      - name: Print Workflow Info
+        run: |
+          echo "=========================================="
+          echo "🚀 WORKFLOW INFORMATION"
+          echo "=========================================="
+          echo "Runner Name: ${{ runner.name }}"
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner Architecture: ${{ runner.arch }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Working Directory: $(pwd)"
+          echo "=========================================="
+          echo "🔐 SECRETS STATUS"
+          echo "=========================================="
+          echo "NODE_ENV Secret: ${{ secrets.NODE_ENV != '' && '✅ Set' || '❌ Not Set' }}"
+          echo "MY_SECRET Secret: ${{ secrets.MY_SECRET != '' && '✅ Set' || '❌ Not Set' }}"
+          echo "CODECOV_TOKEN Secret: ${{ secrets.CODECOV_TOKEN != '' && '✅ Set' || '❌ Not Set' }}"
+          echo "=========================================="
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -26,7 +56,7 @@ jobs:
           node-version: 18
           # Enable caching for npm dependencies
           cache: 'npm'
-
+          cache-dependency-path: 'GitHooks/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
@@ -35,8 +65,8 @@ jobs:
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          path: GitHooks/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('GitHooks/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
 
@@ -50,22 +80,54 @@ jobs:
     # Job dependency: wait for install-dependencies to complete
     needs: install-dependencies
 
+    # Set working directory for all run steps
+    defaults:
+      run:
+        working-directory: GitHooks
+    
+    # Set environment variables from secrets
+    env:
+      NODE_ENV: ${{ secrets.NODE_ENV || 'test' }}
+      MY_SECRET: ${{ secrets.MY_SECRET }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      # -------------------------------
+      # PRINT JOB INFORMATION
+      # -------------------------------
+      - name: Print Quality Check Job Info
+        run: |
+          echo "=========================================="
+          echo "🧪 QUALITY CHECKS JOB"
+          echo "=========================================="
+          echo "Job ID: ${{ github.job }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Run Number: ${{ github.run_number }}"
+          echo "Attempt: ${{ github.run_attempt }}"
+          echo "Working Directory: $(pwd)"
+          echo "=========================================="
+          echo "🔐 ENVIRONMENT VARIABLES (from secrets)"
+          echo "=========================================="
+          echo "NODE_ENV: $NODE_ENV"
+          echo "MY_SECRET: ${MY_SECRET:+***REDACTED***}"
+          echo "MY_SECRET Length: ${#MY_SECRET}"
+          echo "=========================================="
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
+          cache-dependency-path: 'GitHooks/package-lock.json'
 
       # Restore cached node_modules from previous job
       - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          path: GitHooks/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('GitHooks/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
 
@@ -105,18 +167,37 @@ jobs:
       - name: Run Tests with Coverage
         run: npm run test:coverage
         env:
-          # Using a secret (example)
-          NODE_ENV: ${{ secrets.NODE_ENV || 'test' }}
+          # Pass additional environment variables for testing
+          CI: true
+          GITHUB_ACTIONS: true
+
+      # -------------------------------
+      # PRINT COVERAGE SUMMARY
+      # -------------------------------
+      - name: Print Coverage Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "📊 COVERAGE SUMMARY"
+          echo "=========================================="
+          if [ -f coverage/lcov.info ]; then
+            echo "✅ Coverage report generated successfully"
+            echo "Coverage files:"
+            ls -lh coverage/ | head -10
+          else
+            echo "❌ No coverage report found"
+          fi
+          echo "=========================================="
 
       # Upload test results as artifact
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-${{ github.run_number }}
           path: |
-            coverage/
-            **/*.test.log
+            GitHooks/coverage/
+            GitHooks/**/*.test.log
           retention-days: 30
 
       # Upload coverage report as artifact
@@ -124,6 +205,20 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-report
-          path: coverage/
+          name: coverage-report-${{ github.run_number }}
+          path: GitHooks/coverage/
           retention-days: 30
+      
+      # -------------------------------
+      # FINAL STATUS
+      # -------------------------------
+      - name: Print Final Status
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "✅ QUALITY CHECKS COMPLETED"
+          echo "=========================================="
+          echo "Workflow Status: ${{ job.status }}"
+          echo "Time: $(date)"
+          echo "Artifacts uploaded successfully!"
+          echo "=========================================="
